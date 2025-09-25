@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Timetable Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .input-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn {
+            background-color: #4f46e5;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #4338ca;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        table {
+            min-width: 1000px;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+            white-space: nowrap;
+        }
+        th {
+            background-color: #e5e7eb;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        .conflict {
+            background-color: #fecaca;
+            color: #dc2626;
+            font-weight: 600;
+        }
+        .subject-tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background-color: #d1d5db;
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="container mx-auto">
+	<h1 color:"red" >FOR ANY MODIFICATION OR ANOTHER TYPE NEED CONTACT vardhansai605@gmail.com (or) 7989495671 name:-k.sai vardhan.</h1>
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">Dynamic Timetable Generator</h1>
+            <p class="text-lg text-gray-600">Enter your details to generate a daily timetable for your school.</p>
+        </header>
+
+        <main class="grid lg:grid-cols-3 gap-8">
+            <!-- Input Section -->
+            <div class="lg:col-span-1 p-6 input-card h-fit">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Configuration</h2>
+                
+                <div class="mb-4">
+                    <label for="numSections" class="block text-sm font-medium text-gray-700">Number of Sections</label>
+                    <input type="number" id="numSections" value="2" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                
+                <div class="mb-4">
+                    <label for="numPeriods" class="block text-sm font-medium text-gray-700">Periods Per Day</label>
+                    <input type="number" id="numPeriods" value="6" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                
+                <div class="mb-4">
+                    <label for="numTeachers" class="block text-sm font-medium text-gray-700">Number of Teachers</label>
+                    <input type="number" id="numTeachers" value="4" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                
+                <div class="mb-4">
+                    <label for="numClassrooms" class="block text-sm font-medium text-gray-700">Number of Classrooms</label>
+                    <input type="number" id="numClassrooms" value="3" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Teacher-Subject Assignments</h3>
+                    <div id="teacherAssignments" class="space-y-3 mb-4">
+                        <!-- Dynamic teacher inputs will be added here -->
+                    </div>
+                    <button id="addTeacherBtn" class="w-full text-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Add Teacher-Subject
+                    </button>
+                </div>
+                
+                <button id="generateBtn" class="btn w-full text-center">Generate Timetable</button>
+            </div>
+
+            <!-- Timetable Display Section -->
+            <div class="lg:col-span-2 p-6 input-card">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Generated Timetable</h2>
+                <div id="messageArea" class="mb-4 text-center p-3 rounded-lg text-sm hidden"></div>
+                <div id="timetableDisplay" class="table-container">
+                    <p class="text-center text-gray-500">Enter details and click "Generate Timetable" to see the results.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const numSectionsInput = document.getElementById('numSections');
+            const numPeriodsInput = document.getElementById('numPeriods');
+            const numTeachersInput = document.getElementById('numTeachers');
+            const numClassroomsInput = document.getElementById('numClassrooms');
+            const addTeacherBtn = document.getElementById('addTeacherBtn');
+            const generateBtn = document.getElementById('generateBtn');
+            const teacherAssignmentsDiv = document.getElementById('teacherAssignments');
+            const timetableDisplayDiv = document.getElementById('timetableDisplay');
+            const messageArea = document.getElementById('messageArea');
+
+            let teacherCount = 0;
+
+            const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+            const showMessage = (message, type) => {
+                messageArea.textContent = message;
+                messageArea.className = 'mb-4 p-3 rounded-lg text-sm';
+                if (type === 'success') {
+                    messageArea.classList.add('bg-green-100', 'text-green-800');
+                } else if (type === 'error') {
+                    messageArea.classList.add('bg-red-100', 'text-red-800');
+                } else if (type === 'info') {
+                    messageArea.classList.add('bg-blue-100', 'text-blue-800');
+                }
+                messageArea.classList.remove('hidden');
+            };
+
+            const addTeacherAssignment = (teacherName = '', subjectName = '') => {
+                teacherCount++;
+                const teacherId = `teacher-${teacherCount}`;
+                const div = document.createElement('div');
+                div.className = 'flex items-center space-x-2';
+                div.innerHTML = `
+                    <input type="text" id="${teacherId}-name" value="${teacherName}" placeholder="Teacher Name" class="flex-1 rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <input type="text" id="${teacherId}-subject" value="${subjectName}" placeholder="Subject Name" class="flex-1 rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <button data-id="${teacherId}" class="remove-teacher-btn text-red-500 hover:text-red-700 text-xl font-bold">&times;</button>
+                `;
+                teacherAssignmentsDiv.appendChild(div);
+            };
+
+            const getTeacherAssignments = () => {
+                const assignments = {};
+                const inputs = teacherAssignmentsDiv.querySelectorAll('div');
+                inputs.forEach(div => {
+                    const teacherNameInput = div.querySelector('input[placeholder="Teacher Name"]');
+                    const subjectNameInput = div.querySelector('input[placeholder="Subject Name"]');
+                    if (teacherNameInput && subjectNameInput && teacherNameInput.value.trim() && subjectNameInput.value.trim()) {
+                        const teacher = teacherNameInput.value.trim();
+                        const subject = subjectNameInput.value.trim();
+                        if (assignments[subject]) {
+                            assignments[subject].push(teacher);
+                        } else {
+                            assignments[subject] = [teacher];
+                        }
+                    }
+                });
+                return assignments;
+            };
+
+            addTeacherBtn.addEventListener('click', () => {
+                addTeacherAssignment();
+            });
+
+            teacherAssignmentsDiv.addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-teacher-btn')) {
+                    e.target.closest('div').remove();
+                }
+            });
+
+            // Initial assignments for demo
+            addTeacherAssignment('Mr. Smith', 'Math');
+            addTeacherAssignment('Ms. Jones', 'Physics');
+            addTeacherAssignment('Mrs. Davis', 'Chemistry');
+            addTeacherAssignment('Mr. Brown', 'Biology');
+
+            generateBtn.addEventListener('click', () => {
+                const numSections = parseInt(numSectionsInput.value, 10);
+                const numPeriods = parseInt(numPeriodsInput.value, 10);
+                const numTeachers = parseInt(numTeachersInput.value, 10);
+                const numClassrooms = parseInt(numClassroomsInput.value, 10);
+                const teacherSubjectMap = getTeacherAssignments();
+                const subjects = Object.keys(teacherSubjectMap);
+
+                // --- Input Validation ---
+                if (numSections < 1 || numPeriods < 1 || numTeachers < 1 || numClassrooms < 1) {
+                    showMessage('Please ensure all numbers are greater than 0.', 'error');
+                    return;
+                }
+                if (subjects.length < 1) {
+                    showMessage('Please add at least one teacher-subject assignment.', 'error');
+                    return;
+                }
+                if (numTeachers < subjects.length) {
+                    showMessage('Number of teachers must be at least equal to the number of subjects.', 'error');
+                    return;
+                }
+                if (numClassrooms < numSections) {
+                    showMessage('Number of classrooms must be at least equal to the number of sections.', 'error');
+                    return;
+                }
+
+                // --- Timetable Generation Logic (Greedy Algorithm) ---
+                const timetable = {};
+                const teacherAvailability = {}; // { teacherName: { day: { period: true/false } } }
+                const classroomAvailability = {}; // { classroomId: { day: { period: true/false } } }
+                const sectionSubjectsAssigned = {}; // { section: { subject: count } }
+
+                for (let i = 0; i < numSections; i++) {
+                    const sectionName = `Section ${String.fromCharCode(65 + i)}`;
+                    timetable[sectionName] = {};
+                    sectionSubjectsAssigned[sectionName] = subjects.reduce((acc, curr) => ({ ...acc, [curr]: 0 }), {});
+                    for (const day of daysOfWeek) {
+                        timetable[sectionName][day] = new Array(numPeriods).fill(null);
+                    }
+                }
+
+                const allTeachers = new Set(Object.values(teacherSubjectMap).flat());
+                allTeachers.forEach(teacher => {
+                    teacherAvailability[teacher] = {};
+                    daysOfWeek.forEach(day => {
+                        teacherAvailability[teacher][day] = new Array(numPeriods).fill(true);
+                    });
+                });
+
+                for (let i = 1; i <= numClassrooms; i++) {
+                    const classroomId = `Room ${i}`;
+                    classroomAvailability[classroomId] = {};
+                    daysOfWeek.forEach(day => {
+                        classroomAvailability[classroomId][day] = new Array(numPeriods).fill(true);
+                    });
+                }
+
+                let conflictsFound = 0;
+                let assignmentsCount = 0;
+
+                // Priority: Iterate by period and day to fill up slots for all sections
+                for (const day of daysOfWeek) {
+                    for (let period = 0; period < numPeriods; period++) {
+                        for (let i = 0; i < numSections; i++) {
+                            const sectionName = `Section ${String.fromCharCode(65 + i)}`;
+                            const availableSubjects = subjects.filter(subject => {
+                                // Simple check to ensure subjects are not over-assigned
+                                return sectionSubjectsAssigned[sectionName][subject] < daysOfWeek.length;
+                            });
+
+                            if (availableSubjects.length === 0) {
+                                // All subjects have been assigned for this section, fill with 'Free' or break
+                                // For now, we will leave it empty as a placeholder
+                                continue;
+                            }
+
+                            // Shuffle to add a bit of randomness
+                            const shuffledSubjects = [...availableSubjects].sort(() => 0.5 - Math.random());
+
+                            let assignmentFound = false;
+                            for (const subject of shuffledSubjects) {
+                                const possibleTeachers = teacherSubjectMap[subject] || [];
+                                const shuffledTeachers = [...possibleTeachers].sort(() => 0.5 - Math.random());
+
+                                for (const teacher of shuffledTeachers) {
+                                    if (teacherAvailability[teacher]?.[day]?.[period]) {
+                                        // Find an available classroom
+                                        let availableClassroom = null;
+                                        for (const classroomId in classroomAvailability) {
+                                            if (classroomAvailability[classroomId]?.[day]?.[period]) {
+                                                availableClassroom = classroomId;
+                                                break;
+                                            }
+                                        }
+
+                                        if (availableClassroom) {
+                                            // Assignment found!
+                                            timetable[sectionName][day][period] = {
+                                                subject,
+                                                teacher,
+                                                classroom: availableClassroom
+                                            };
+
+                                            teacherAvailability[teacher][day][period] = false;
+                                            classroomAvailability[availableClassroom][day][period] = false;
+                                            sectionSubjectsAssigned[sectionName][subject]++;
+                                            assignmentFound = true;
+                                            assignmentsCount++;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (assignmentFound) break;
+                            }
+
+                            if (!assignmentFound) {
+                                timetable[sectionName][day][period] = 'Conflict';
+                                conflictsFound++;
+                            }
+                        }
+                    }
+                }
+
+                // --- Render the Timetable ---
+                let html = '';
+                for (let i = 0; i < numSections; i++) {
+                    const sectionName = `Section ${String.fromCharCode(65 + i)}`;
+                    html += `<h3 class="text-xl font-semibold text-gray-700 my-4">${sectionName}</h3>`;
+                    html += `<div class="table-container mb-8"><table><thead><tr><th class="rounded-tl-lg">Day / Period</th>`;
+                    for (let p = 1; p <= numPeriods; p++) {
+                        html += `<th>Period ${p}</th>`;
+                    }
+                    html += `</tr></thead><tbody>`;
+                    
+                    for (const day of daysOfWeek) {
+                        html += `<tr><td class="font-semibold">${day}</td>`;
+                        for (let p = 0; p < numPeriods; p++) {
+                            const entry = timetable[sectionName][day][p];
+                            let cellContent = '';
+                            let isConflict = false;
+                            if (entry === 'Conflict') {
+                                cellContent = 'Conflict';
+                                isConflict = true;
+                            } else if (entry) {
+                                cellContent = `
+                                    <div class="flex flex-col items-center space-y-1">
+                                        <span class="text-sm font-bold text-gray-800">${entry.subject}</span>
+                                        <span class="text-xs text-gray-500">${entry.teacher}</span>
+                                        <span class="text-xs font-medium text-gray-500">${entry.classroom}</span>
+                                    </div>
+                                `;
+                            } else {
+                                cellContent = '<span class="text-gray-400">Free</span>';
+                            }
+                            html += `<td class="${isConflict ? 'conflict' : ''}">${cellContent}</td>`;
+                        }
+                        html += `</tr>`;
+                    }
+                    html += `</tbody></table></div>`;
+                }
+                
+                timetableDisplayDiv.innerHTML = html;
+
+                if (conflictsFound > 0) {
+                    showMessage(`Timetable generated with ${conflictsFound} conflicts. Conflicts are highlighted in red. Please manually adjust these slots.`, 'error');
+                } else {
+                    showMessage('Timetable generated successfully! No conflicts were found.', 'success');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

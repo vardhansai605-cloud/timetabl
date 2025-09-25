@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Timetable Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 2rem;
+        }
+        .input-card {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+        .section-title {
+            font-weight: 600;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+        .input-group {
+            margin-bottom: 1rem;
+        }
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            border: 1px solid #d1d5db;
+            transition: all 0.2s;
+            outline: none;
+        }
+        input:focus, select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+        button {
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #4b5563;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+        }
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+        .timetable-container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 1rem;
+            text-align: center;
+        }
+        th {
+            background-color: #f9fafb;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .cell-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .cell-content .subject {
+            font-weight: 600;
+        }
+        .cell-content .teacher {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        .error-message {
+            color: #dc2626;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+<h1>FOR ANY MODIFICATION OR ANOTHER TYPE NEED CONTACT vardhansai605@gmail.com (or) 7989495671 name:-k.sai vardhan.</h1>
+    <h1 class="text-4xl font-bold text-center mb-8">Dynamic Timetable Generator</h1>
+    <p class="text-center text-gray-600 mb-8">Enter the details below to generate a valid school timetable for Monday to Saturday.</p>
+
+    <!-- Input Form -->
+    <div class="input-card">
+        <form id="timetableForm">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Basic Inputs -->
+                <div class="col-span-1">
+                    <div class="section-title">General Details</div>
+                    <div class="input-group">
+                        <label class="block text-gray-700 mb-2">Periods per day</label>
+                        <input type="number" id="periodsPerDay" value="8" min="1" required class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label class="block text-gray-700 mb-2">Number of Sections</label>
+                        <input type="number" id="numSections" value="2" min="1" required class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label class="block text-gray-700 mb-2">Number of Teachers</label>
+                        <input type="number" id="numTeachers" value="4" min="1" required class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label class="block text-gray-700 mb-2">Number of Classrooms</label>
+                        <input type="number" id="numClassrooms" value="2" min="1" required class="rounded-lg">
+                    </div>
+                    <div class="input-group">
+                        <label class="block text-gray-700 mb-2">Number of Labs</label>
+                        <input type="number" id="numLabs" value="1" min="0" required class="rounded-lg">
+                    </div>
+                </div>
+
+                <!-- Teacher-Subject and Lab Details -->
+                <div class="col-span-1 md:col-span-2 lg:col-span-1">
+                    <div class="section-title">Teacher & Subject Mapping</div>
+                    <p class="text-sm text-gray-500 mb-4">Enter a subject name for each teacher. Ensure unique subjects.</p>
+                    <div id="teacherSubjectInputs" class="space-y-4"></div>
+                </div>
+
+                <div class="col-span-1 md:col-span-2 lg:col-span-1">
+                    <div class="section-title">Lab Details</div>
+                    <p class="text-sm text-gray-500 mb-4">Enter lab details for each lab.</p>
+                    <div id="labInputs" class="space-y-4"></div>
+                </div>
+            </div>
+            
+            <div class="flex justify-center mt-8">
+                <button type="submit" class="btn-primary">Generate Timetable</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Error Message Display -->
+    <div id="errorMessage" class="error-message hidden"></div>
+
+    <!-- Timetable Output -->
+    <div id="timetableOutput" class="timetable-container hidden"></div>
+</div>
+
+<script>
+    // Constants and DOM elements
+    const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const form = document.getElementById('timetableForm');
+    const periodsPerDayInput = document.getElementById('periodsPerDay');
+    const numSectionsInput = document.getElementById('numSections');
+    const numTeachersInput = document.getElementById('numTeachers');
+    const numLabsInput = document.getElementById('numLabs');
+    const teacherSubjectInputsContainer = document.getElementById('teacherSubjectInputs');
+    const labInputsContainer = document.getElementById('labInputs');
+    const timetableOutput = document.getElementById('timetableOutput');
+    const errorMessage = document.getElementById('errorMessage');
+
+    // State
+    let teachers = [];
+    let labs = [];
+
+    // Utility function to show a message in the designated message area
+    function showMessage(msg, isError = true) {
+        errorMessage.textContent = msg;
+        errorMessage.classList.remove('hidden');
+        timetableOutput.classList.add('hidden');
+        if (!isError) {
+            errorMessage.classList.remove('text-red-600');
+            errorMessage.classList.add('text-green-600');
+        } else {
+            errorMessage.classList.remove('text-green-600');
+            errorMessage.classList.add('text-red-600');
+        }
+    }
+
+    // Function to update dynamic input fields
+    function updateInputs() {
+        // Teachers and Subjects
+        const numTeachers = parseInt(numTeachersInput.value) || 0;
+        teacherSubjectInputsContainer.innerHTML = '';
+        for (let i = 0; i < numTeachers; i++) {
+            const inputGroup = document.createElement('div');
+            inputGroup.className = 'flex items-center space-x-2';
+            inputGroup.innerHTML = `
+                <input type="text" placeholder="Teacher ${i + 1} Name" required class="flex-1 teacher-name-input">
+                <input type="text" placeholder="Subject" required class="flex-1 teacher-subject-input">
+            `;
+            teacherSubjectInputsContainer.appendChild(inputGroup);
+        }
+
+        // Labs
+        const numLabs = parseInt(numLabsInput.value) || 0;
+        labInputsContainer.innerHTML = '';
+        for (let i = 0; i < numLabs; i++) {
+            const inputGroup = document.createElement('div');
+            inputGroup.className = 'p-4 border border-gray-200 rounded-lg space-y-2';
+            inputGroup.innerHTML = `
+                <div class="input-group">
+                    <input type="text" placeholder="Lab ${i + 1} Name" required class="lab-name-input">
+                </div>
+                <div class="input-group">
+                    <label class="block text-gray-700 mb-2 text-sm">Continuous Periods</label>
+                    <input type="number" placeholder="e.g., 2" value="2" min="1" required class="lab-periods-input">
+                </div>
+                <div class="input-group">
+                    <label class="block text-gray-700 mb-2 text-sm">Assigned Teacher</label>
+                    <select required class="lab-teacher-select"></select>
+                </div>
+            `;
+            labInputsContainer.appendChild(inputGroup);
+        }
+        updateLabTeacherSelects();
+    }
+
+    // Function to update teacher dropdowns in lab section
+    function updateLabTeacherSelects() {
+        const teacherNames = Array.from(document.querySelectorAll('.teacher-name-input')).map(input => input.value).filter(name => name);
+        const labTeacherSelects = document.querySelectorAll('.lab-teacher-select');
+        labTeacherSelects.forEach(select => {
+            select.innerHTML = '<option value="">Select a teacher</option>';
+            teacherNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+        });
+    }
+
+    // Main Timetable Generation Logic
+    function generateTimetable(event) {
+        event.preventDefault();
+        
+        // Clear previous state
+        timetableOutput.innerHTML = '';
+        errorMessage.classList.add('hidden');
+
+        // Parse inputs
+        const periodsPerDay = parseInt(periodsPerDayInput.value);
+        const numSections = parseInt(numSectionsInput.value);
+        const numTeachers = parseInt(numTeachersInput.value);
+        const numLabs = parseInt(numLabsInput.value);
+
+        if (periodsPerDay <= 0 || numSections <= 0 || numTeachers <= 0) {
+            showMessage("Please enter valid numbers for all fields.");
+            return;
+        }
+
+        const teacherInputs = document.querySelectorAll('.teacher-name-input');
+        const subjectInputs = document.querySelectorAll('.teacher-subject-input');
+        const labNameInputs = document.querySelectorAll('.lab-name-input');
+        const labPeriodsInputs = document.querySelectorAll('.lab-periods-input');
+        const labTeacherSelects = document.querySelectorAll('.lab-teacher-select');
+        
+        const teachers = {};
+        for (let i = 0; i < numTeachers; i++) {
+            teachers[teacherInputs[i].value] = {
+                subject: subjectInputs[i].value,
+                busyTimes: {} // Format: busyTimes['Monday'][period] = true
+            };
+        }
+
+        const labs = {};
+        for (let i = 0; i < numLabs; i++) {
+            labs[labNameInputs[i].value] = {
+                teacher: labTeacherSelects[i].value,
+                continuousPeriods: parseInt(labPeriodsInputs[i].value)
+            };
+        }
+
+        // Validate inputs
+        const uniqueSubjects = new Set(Object.values(teachers).map(t => t.subject));
+        if (uniqueSubjects.size !== numTeachers) {
+            showMessage("Each teacher must have a unique subject.");
+            return;
+        }
+        
+        // Ensure every teacher is a valid teacher
+        for (const lab of Object.values(labs)) {
+             if (!teachers[lab.teacher]) {
+                showMessage(`Lab teacher "${lab.teacher}" not found in the teacher list.`);
+                return;
+            }
+        }
+        
+        const timetable = {};
+        const sectionLabs = {}; // Track labs per section per week
+        const sectionSubjects = {}; // Track subjects per section per day
+        const allSubjects = Object.values(teachers).map(t => t.subject);
+
+        // Initialize state for generation
+        for (let i = 0; i < numSections; i++) {
+            sectionLabs[`Section ${i + 1}`] = new Set();
+            sectionSubjects[`Section ${i + 1}`] = new Set();
+        }
+
+        // The core scheduling logic
+        for (const day of DAYS) {
+            timetable[day] = {};
+            // Reset daily subject count for each section
+            for (let i = 0; i < numSections; i++) {
+                sectionSubjects[`Section ${i + 1}`].clear();
+            }
+
+            for (let period = 1; period <= periodsPerDay; period++) {
+                timetable[day][period] = {};
+                for (let section = 1; section <= numSections; section++) {
+                    const sectionName = `Section ${section}`;
+                    let assigned = false;
+                    let attempts = 0;
+                    
+                    const availableSubjects = allSubjects.filter(sub => !sectionSubjects[sectionName].has(sub));
+                    const shuffledSubjects = availableSubjects.sort(() => 0.5 - Math.random());
+
+                    while (!assigned && attempts < availableSubjects.length + numLabs) {
+                        const isLabTurn = Math.random() < 0.2; // A bit of randomness to try labs
+                        let subjectToAssign = null;
+                        let isLab = false;
+
+                        if (isLabTurn && numLabs > 0 && sectionLabs[sectionName].size === 0) {
+                            // Try to assign a lab if it's the section's first lab of the week
+                            const labToAssign = Object.values(labs)[0]; // Simplified for this example, picking the first lab
+                            const labTeacher = labToAssign.teacher;
+                            const continuousPeriods = labToAssign.continuousPeriods;
+                            const isTeacherBusy = teachers[labTeacher].busyTimes[day] && teachers[labTeacher].busyTimes[day][period];
+                            
+                            // Check for continuous periods and teacher availability
+                            let canAssignLab = !isTeacherBusy && (period + continuousPeriods - 1 <= periodsPerDay);
+                            if (canAssignLab) {
+                                for(let i = 1; i < continuousPeriods; i++) {
+                                    if(teachers[labTeacher].busyTimes[day] && teachers[labTeacher].busyTimes[day][period + i]) {
+                                        canAssignLab = false;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (canAssignLab) {
+                                subjectToAssign = `${Object.keys(labs)[0]} (Lab)`;
+                                isLab = true;
+                                teachers[labTeacher].busyTimes[day] = teachers[labTeacher].busyTimes[day] || {};
+                                for(let i = 0; i < continuousPeriods; i++) {
+                                    teachers[labTeacher].busyTimes[day][period + i] = true;
+                                }
+                                sectionLabs[sectionName].add(Object.keys(labs)[0]);
+                                timetable[day][period][sectionName] = { subject: subjectToAssign, teacher: labTeacher, isLab: true, duration: continuousPeriods };
+                                for(let i = 1; i < continuousPeriods; i++) {
+                                    timetable[day][period + i] = timetable[day][period + i] || {};
+                                    timetable[day][period + i][sectionName] = { subject: 'Continued', teacher: labTeacher, isLab: true };
+                                }
+                                assigned = true;
+                                break;
+                            }
+                        }
+                        
+                        // If no lab, try to assign a regular subject
+                        if (!assigned) {
+                            for(const subject of shuffledSubjects) {
+                                const teacherName = Object.keys(teachers).find(name => teachers[name].subject === subject);
+                                const isTeacherBusy = teachers[teacherName].busyTimes[day] && teachers[teacherName].busyTimes[day][period];
+
+                                if (!isTeacherBusy) {
+                                    subjectToAssign = subject;
+                                    teachers[teacherName].busyTimes[day] = teachers[teacherName].busyTimes[day] || {};
+                                    teachers[teacherName].busyTimes[day][period] = true;
+                                    sectionSubjects[sectionName].add(subject);
+                                    timetable[day][period][sectionName] = { subject: subjectToAssign, teacher: teacherName, isLab: false };
+                                    assigned = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (assigned) break;
+                        attempts++;
+                    }
+                    if (!assigned) {
+                        showMessage(`Could not create a valid timetable. Please check your constraints. Conflict at ${day}, Period ${period}, Section ${sectionName}. Retrying...`);
+                        return generateTimetable(event); // Simple retry mechanism
+                    }
+                }
+            }
+        }
+        
+        // Display the generated timetable
+        displayTimetable(timetable, periodsPerDay, numSections);
+    }
+    
+    function displayTimetable(timetable, periodsPerDay, numSections) {
+        let tableHTML = `
+            <table class="w-full">
+                <thead>
+                    <tr>
+                        <th class="rounded-tl-lg">Day / Period</th>
+                        ${Array.from({ length: periodsPerDay }, (_, i) => `<th>Period ${i + 1}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${DAYS.map(day => `
+                        <tr>
+                            <td class="font-bold bg-gray-50">${day}</td>
+                            ${Array.from({ length: periodsPerDay }, (_, i) => {
+                                const period = i + 1;
+                                let cellContent = '';
+                                for (let section = 1; section <= numSections; section++) {
+                                    const sectionName = `Section ${section}`;
+                                    const entry = timetable[day]?.[period]?.[sectionName];
+                                    if (entry) {
+                                        if (entry.subject === 'Continued') {
+                                            // Skip rendering 'Continued' entries, let the first entry span
+                                            cellContent += `<div class="p-2 text-sm text-gray-400">--</div>`;
+                                        } else {
+                                            const rowspan = entry.isLab ? entry.duration : 1;
+                                            cellContent += `
+                                                <div class="cell-content p-2 border border-gray-200 rounded-lg bg-blue-50 my-1">
+                                                    <span class="font-semibold text-sm">${sectionName}</span>
+                                                    <span class="subject text-blue-800">${entry.subject}</span>
+                                                    <span class="teacher text-gray-600">${entry.teacher}</span>
+                                                </div>
+                                            `;
+                                        }
+                                    } else {
+                                        cellContent += `<div class="p-2 text-sm text-gray-400">Free</div>`;
+                                    }
+                                }
+                                return `<td>${cellContent}</td>`;
+                            }).join('')}
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+        timetableOutput.innerHTML = tableHTML;
+        timetableOutput.classList.remove('hidden');
+        showMessage("Timetable generated successfully!", false);
+    }
+
+    // Event listeners for dynamic input fields
+    periodsPerDayInput.addEventListener('input', updateInputs);
+    numSectionsInput.addEventListener('input', updateInputs);
+    numTeachersInput.addEventListener('input', () => {
+        updateInputs();
+        updateLabTeacherSelects();
+    });
+    numLabsInput.addEventListener('input', updateInputs);
+    
+    teacherSubjectInputsContainer.addEventListener('input', updateLabTeacherSelects);
+
+    form.addEventListener('submit', generateTimetable);
+
+    // Initial call to set up the form
+    updateInputs();
+</script>
+
+</body>
+</html>
